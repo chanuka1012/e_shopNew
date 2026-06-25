@@ -8,6 +8,8 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import AdminDashboard from './components/admin/AdminDashboard';
 import UserDashboard from './components/user/UserDashboard';
+import UserOrders from './components/user/UserOrders';
+import UserProfile from './components/user/UserProfile';
 import './App.css';
 
 function App() {
@@ -21,15 +23,29 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             
+            {/* Admin Routes */}
             <Route path="/admin/dashboard" element={
               <ProtectedRoute requiredRole="ADMIN">
                 <AdminDashboard />
               </ProtectedRoute>
             } />
             
+            {/* User Routes */}
             <Route path="/user/dashboard" element={
               <ProtectedRoute requiredRole="USER">
                 <UserDashboard />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/user/orders" element={
+              <ProtectedRoute requiredRole="USER">
+                <UserOrders />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/user/profile" element={
+              <ProtectedRoute requiredRole="USER">
+                <UserProfile />
               </ProtectedRoute>
             } />
           </Routes>

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from '../api/axios';
+import api from '../api/axios';
 
 const AuthContext = createContext();
 
@@ -15,12 +15,19 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      // You can add an endpoint to check current user
-      // For now, we'll check localStorage
       const token = localStorage.getItem('token');
       if (token) {
-        // Decode token or fetch user info
-        setUser({ role: localStorage.getItem('role') });
+        try {
+          const response = await api.get('/user/info', {
+            headers: { Authorization: `Bearer ${token}` },
+            withCredentials: true
+          });
+          setUser(response.data);
+          localStorage.setItem('role', response.data.role);
+        } catch (error) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('role');
+        }
       }
     } catch (error) {
       console.error('Auth check failed:', error);
@@ -31,28 +38,38 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      // Spring Security uses form-based login
-      const response = await axios.post('/login', null, {
-        params: { username: email, password: password },
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      const params = new URLSearchParams();
+      params.append('username', email);
+      params.append('password', password);
+
+      const response = await api.post('/login', params, {
+        headers: { 
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        withCredentials: true
       });
       
-      // If login successful, fetch user role
-      const userInfo = await axios.get('/user/info');
-      localStorage.setItem('role', userInfo.data.role);
-      setUser(userInfo.data);
-      return { success: true };
+      if (response.status === 200) {
+        const userInfo = await api.get('/user/info', {
+          withCredentials: true
+        });
+        localStorage.setItem('role', userInfo.data.role);
+        localStorage.setItem('token', 'authenticated');
+        setUser(userInfo.data);
+        return { success: true };
+      }
     } catch (error) {
+      console.error('Login error:', error);
       return { 
         success: false, 
-        error: error.response?.data || 'Login failed' 
+        error: error.response?.data?.error || error.response?.data || 'Login failed' 
       };
     }
   };
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('/register', userData);
+      const response = await api.post('/register', userData);
       return { success: true, data: response.data };
     } catch (error) {
       return { 
@@ -64,7 +81,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.post('/logout');
+      await api.post('/logout', {}, { withCredentials: true });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
