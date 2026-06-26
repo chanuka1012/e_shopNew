@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
+  const { totalItems } = useCart(); // Add this to get cart item count
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -40,6 +42,39 @@ const Navbar = () => {
             <span style={{ color: '#ecf0f1' }}>
               Welcome, {user?.name || user?.email || 'User'}!
             </span>
+            
+            {/* Cart Link with Badge */}
+            <Link to="/cart" style={{ 
+              color: 'white', 
+              textDecoration: 'none',
+              position: 'relative',
+              padding: '0.25rem 0.5rem',
+              borderRadius: '4px',
+              transition: 'background-color 0.3s'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            >
+              🛒 Cart
+              {totalItems > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  right: '-8px',
+                  backgroundColor: '#e74c3c',
+                  color: 'white',
+                  borderRadius: '50%',
+                  padding: '2px 6px',
+                  fontSize: '0.7rem',
+                  minWidth: '18px',
+                  textAlign: 'center',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}>
+                  {totalItems}
+                </span>
+              )}
+            </Link>
             
             {isAdmin ? (
               <>
